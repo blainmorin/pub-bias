@@ -70,7 +70,7 @@ drop.proportion = function(df, proportion) {
   new.df = df %>%
     group_by(.data$my_ID) %>%
     arrange(desc(.data$obs), .by_group = TRUE) %>%
-    slice(seq(round((1-proportion)) * n()))
+    slice( seq((1-proportion) * n()) )
   
   return(new.df)
   
@@ -90,3 +90,5 @@ half.truth = biased.data %>% group_by(my_ID) %>%
          upperCI = get.ub(a = a, b = b, c = c, d = d))
 
 
+
+  
