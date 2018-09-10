@@ -1,30 +1,49 @@
+---
+title: "meeting 1"
+author: "Blain Morin"
+date: "September 9, 2018"
+output: 
+  html_document:
+    theme: journal
+---
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 require(dplyr) || install.packages("dplyr")
 require(meta) || install.packages("meta")
 require(metasens) || install.packages("metasens")
 require(readr) || install.packages("readr")
+require(knitr) || install.packages("knitr")
+require(kableExtra) || install.packages("kableExtra")
+```
 
 
-### Put file path here
+Here is the structure of the data from Orestis (no_of_studies > 5).
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
 X2010_6 <- read_delim("2010_6.csv", "\t", 
                       escape_double = FALSE, trim_ws = TRUE)
-
-
-### Create subset
-### Lin et al use meta analysis with at least five studies
-### Lin et al use odds ratios for binary outcomes
 
 small.data = X2010_6 %>% 
           filter(number_review >= 1, 
                  number_review <= 500,
                  no_of_studies >= 5)
 
-
-
 ### Add number of obs column 
 small.data = small.data %>% mutate(obs = a + b + c +d)
 
+kable(head(small.data)[1:5,]) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+All of the column names:
+```{r, echo=FALSE}
+colnames(small.data)
+```
 
 
+Using meta package to calulate odds ratios for each outcome.
+```{r}
 ### Function to retrieve odds ratio
 
 get.or = function (a, b, c, d){
@@ -33,7 +52,6 @@ get.or = function (a, b, c, d){
   exp(the.meta$TE.fixed)
   
 }
-
 
 ### Function to retrieve CI lower bound
 
@@ -44,7 +62,6 @@ get.lb = function (a, b, c, d){
   
 }
 
-
 ### Function to retrieve CI upper bound
 
 get.ub = function (a, b, c, d){
@@ -53,18 +70,35 @@ get.ub = function (a, b, c, d){
   exp(the.meta$upper.fixed)
   
 }
+```
 
+Here I retrieve the odds ratios and CIs for each outcome:
+(this would be the "truth"")
 
-
-### Get odds ratios and CI for each outcome
+```{r, cache=TRUE}
 
 truth = small.data %>% group_by(my_ID) %>%
-  mutate(true.OR = get.or(a = a, b = b, c = c, d = d),
+  mutate(truth.OR = get.or(a = a, b = b, c = c, d = d),
          lowerCI = get.lb(a = a, b = b, c = c, d = d),
          upperCI = get.ub(a = a, b = b, c = c, d = d))
 
+```
 
-### Function that drops small studies (by sample size)
+```{r, echo = FALSE}
+
+truth.table = truth %>% 
+  group_by(my_ID) %>%
+  slice(1)
+
+kable(truth.table[1:6, c(1:2, 9,11, 21:23)], digits = 3)
+
+
+```
+
+
+Example function for dropping a proportion of studies because of small sample size:
+
+```{r}
 
 drop.proportion = function(df, proportion) {
   
@@ -77,9 +111,11 @@ drop.proportion = function(df, proportion) {
   
 }
 
+```
 
+Example: Remove the smallest 20% (by sample size)
 
-### Example: Remove the smallest 20% (by sample size)
+```{r}
 
 biased.data = drop.proportion(small.data, .2)
 
@@ -90,17 +126,19 @@ half.truth = biased.data %>% group_by(my_ID) %>%
          lowerCI = get.lb(a = a, b = b, c = c, d = d),
          upperCI = get.ub(a = a, b = b, c = c, d = d))
 
+```
 
-test = half.truth %>% filter(my_ID == 33)
+```{r, echo = FALSE}
+half.truth.table = half.truth %>% 
+  group_by(my_ID) %>%
+  slice(1)
 
-test.meta = metabin(event.e = a, n.e = a + c, event.c = b, n.c = b + d, data = test, sm = "OR")
+kable(half.truth.table[1:6, c(1:2, 9,11, 22:24)], digits = 3)
+```
 
-test.copas = copas(test.meta)
+Trim and fill on the biased set (using meta package):
 
-test.trimfill = trimfill(test.meta)
-test.trimfill$
-trimfill(test.meta)$TE.fixed
-summary(test.trimfill)
+```{r, message=FALSE}
 
 added.trim = half.truth %>%
   group_by(my_ID) %>% 
@@ -111,8 +149,17 @@ added.trim = half.truth %>%
 interm = truth %>%
   select(-lowerCI, -upperCI)
 
-
 joinedwithtruth = inner_join(x = added.trim, y = interm) %>%
   group_by(my_ID) %>%
   slice(1)
 
+```
+
+```{r, echo=FALSE, message=FALSE}
+
+ratio.table = joinedwithtruth %>%
+  select(review, comparison, OR, trimfill.OR, truth.OR)
+
+kable(ratio.table[1:10,], digits = 3)
+
+```
