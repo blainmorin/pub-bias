@@ -1,5 +1,5 @@
 ---
-title: "meeting 1"
+title: "Meeting 1"
 author: "Blain Morin"
 date: "September 9, 2018"
 output: 
@@ -16,8 +16,9 @@ require(knitr) || install.packages("knitr")
 require(kableExtra) || install.packages("kableExtra")
 ```
 
+## Data
 
-Here is the structure of the data from Orestis (no_of_studies > 5).
+**The structure of the data from Orestis (no_of_studies > 5):**
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
@@ -32,17 +33,21 @@ small.data = X2010_6 %>%
 ### Add number of obs column 
 small.data = small.data %>% mutate(obs = a + b + c +d)
 
-kable(head(small.data)[1:5,]) %>%
+kable(head(small.data)[1:3,]) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-All of the column names:
+**All of the column names:**
 ```{r, echo=FALSE}
 colnames(small.data)
 ```
 
 
-Using meta package to calulate odds ratios for each outcome.
+
+#Odds Ratios for each outcome
+
+**Using meta package to calulate odds ratios for each outcome.**
+
 ```{r}
 ### Function to retrieve odds ratio
 
@@ -72,8 +77,8 @@ get.ub = function (a, b, c, d){
 }
 ```
 
-Here I retrieve the odds ratios and CIs for each outcome:
-(this would be the "truth"")
+**Here I retrieve the odds ratios and CIs for each outcome:**
+(*this would be the "truth"*)
 
 ```{r, cache=TRUE}
 
@@ -96,7 +101,8 @@ kable(truth.table[1:6, c(1:2, 9,11, 21:23)], digits = 3)
 ```
 
 
-Example function for dropping a proportion of studies because of small sample size:
+#Drop studies
+**Example function for dropping a proportion of studies because of small sample size:**
 
 ```{r}
 
@@ -113,9 +119,9 @@ drop.proportion = function(df, proportion) {
 
 ```
 
-Example: Remove the smallest 20% (by sample size)
+**Example: Remove the smallest 20% (by sample size)**
 
-```{r}
+```{r, cache = TRUE}
 
 biased.data = drop.proportion(small.data, .2)
 
@@ -136,9 +142,10 @@ half.truth.table = half.truth %>%
 kable(half.truth.table[1:6, c(1:2, 9,11, 22:24)], digits = 3)
 ```
 
-Trim and fill on the biased set (using meta package):
+#Trim and fill
+**Trim and fill on the biased set (using meta package):**
 
-```{r, message=FALSE}
+```{r, message=FALSE, cache=TRUE}
 
 added.trim = half.truth %>%
   group_by(my_ID) %>% 
