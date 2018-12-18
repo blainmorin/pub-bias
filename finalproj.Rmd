@@ -1,0 +1,167 @@
+---
+title: "Final Project"
+author: "Blain Morin"
+date: "December 17, 2018"
+output: pdf_document
+header-includes:
+- \usepackage{float}
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+
+### Set knitr options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+### Load Required Libraries
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+### Load Data
+full = read_delim("2010_6.csv", "\t", 
+                      escape_double = FALSE, trim_ws = TRUE)
+
+```
+
+```{r}
+
+### Get smaller data
+full = full %>%
+  filter(a > 1,
+         b > 1,
+         c > 1,
+         d > 1) %>%
+  group_by(my_ID) %>%
+  mutate(correct_no_of_studies = n()) %>%
+  ungroup() %>%
+  filter(correct_no_of_studies >= 5) 
+
+
+### Get only largest meta (highest number of studies)
+full = full %>%
+  group_by(number_review) %>%
+  filter(correct_no_of_studies == max(correct_no_of_studies)) %>%
+  mutate(n = a + b + c + d) %>%
+  group_by(my_ID) %>%
+  mutate(meta.n = sum(n)) %>%
+  ungroup() %>%
+  group_by(number_review) %>%
+  filter(meta.n == max(meta.n)) %>%
+  ungroup()
+
+
+```
+
+```{r}
+
+### Add study effect size and variance
+### Add DesSimonian-Laird Estimate for tau2 and se.tau2
+full = full %>% 
+  mutate(yi = escalc(measure = "OR",
+                     ai = a,
+                     bi = b,
+                     ci = c, 
+                     di = d)$yi,
+         vi = escalc(measure = "OR",
+                     ai = a,
+                     bi = b,
+                     ci = c, 
+                     di = d)$vi) %>%
+  group_by(my_ID) %>%
+  mutate(DL.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "DL")$tau2,
+         DL.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "DL")$se.tau2) %>%
+  ungroup()
+  
+
+
+```
+
+```{r}
+
+### Add Paule and Mandel 
+full = full %>%
+  group_by(my_ID) %>%
+  mutate(PM.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "PM")$tau2,
+         PM.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "PM")$se.tau2) %>%
+  ungroup()
+  
+
+```
+
+```{r}
+
+### Add Hedges 
+full = full %>%
+  group_by(my_ID) %>%
+  mutate(HE.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "HE")$tau2,
+         HE.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "HE")$se.tau2) %>%
+  ungroup()
+
+```
+
+```{r}
+
+### Add Hunter-Schmidt
+full = full %>%
+  group_by(my_ID) %>%
+  mutate(HS.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "HS")$tau2,
+         HS.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "HS")$se.tau2) %>%
+  ungroup()
+
+```
+
+```{r}
+
+### Add Maximum Likelihood
+full = full %>%
+  group_by(my_ID) %>%
+  mutate(ML.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "ML")$tau2,
+         ML.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "ML")$se.tau2) %>%
+  ungroup()
+
+```
+
+
+
+```{r}
+
+full %>%
+  group_by(number_review) %>%
+  slice(1) %>%
+  ggplot(aes(x = PM.tau2)) +
+  geom_histogram(binwidth = .1)
+
+test = full %>%
+  filter(DL.tau2 >2)
+
+mean(full$DL.tau2)
+sd(full$DL.tau2)
+```
+
+
+
+
+
+
+
