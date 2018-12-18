@@ -10,7 +10,7 @@ header-includes:
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 
 ### Set knitr options
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE)
 
 ### Load Required Libraries
 
@@ -18,6 +18,8 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 library(extrafont)
+library(tidyr)
+library(metafor)
 
 ### Load Data
 full = read_delim("2010_6.csv", "\t", 
@@ -199,7 +201,7 @@ full = full %>%
 
 
 
-```{r, fig.width=12}
+```{r, fig.width=12, fig.height=10}
 
 set.seed(100)
 full %>%
@@ -227,7 +229,34 @@ full %>%
 
 ```{r}
 
+### Put in long format
+full.long = full %>%
+  gather(key = "model", value = "summary", DL.summary, PM.summary,
+         HE.summary, HS.summary, ML.summary, REML.summary, SJ.summary)
 
+### Slice 1 summary for each model
+full.long = full.long %>%
+  group_by(my_ID, model) %>%
+  slice(1) %>%
+  ungroup()
+
+### Calculate biggest difference
+full.long = full.long %>%
+  group_by(my_ID) %>%
+  mutate(abs.sum = abs(summary)) %>%
+  mutate(diff = max(abs.sum) - min(abs.sum)) %>%
+  mutate(p.diff = diff/max(abs.sum)) %>%
+  ungroup()
+
+full.long %>%
+  group_by(my_ID) %>%
+  slice(1) %>%
+  ggplot(aes(x = p.diff, y = ..density..)) +
+  geom_histogram(binwidth = .1, fill = "white", color = "black") +
+  theme_light() +
+  xlab("Proportionate Difference") +
+  ylab("Density") +
+  theme(text=element_text(size=12,  family="CM Sans"))
 
 ```
 
