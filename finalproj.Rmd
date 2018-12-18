@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(extrafont)
 
 ### Load Data
 full = read_delim("2010_6.csv", "\t", 
@@ -74,7 +75,10 @@ full = full %>%
                            method = "DL")$tau2,
          DL.se.tau2 = rma.uni(yi = yi,
                            vi = vi,
-                           method = "DL")$se.tau2) %>%
+                           method = "DL")$se.tau2,
+         DL.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "DL")$beta) %>%
   ungroup()
   
 
@@ -91,7 +95,10 @@ full = full %>%
                            method = "PM")$tau2,
          PM.se.tau2 = rma.uni(yi = yi,
                            vi = vi,
-                           method = "PM")$se.tau2) %>%
+                           method = "PM")$se.tau2,
+         PM.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "PM")$beta) %>%
   ungroup()
   
 
@@ -107,7 +114,10 @@ full = full %>%
                            method = "HE")$tau2,
          HE.se.tau2 = rma.uni(yi = yi,
                            vi = vi,
-                           method = "HE")$se.tau2) %>%
+                           method = "HE")$se.tau2,
+         HE.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "HE")$beta) %>%
   ungroup()
 
 ```
@@ -122,7 +132,10 @@ full = full %>%
                            method = "HS")$tau2,
          HS.se.tau2 = rma.uni(yi = yi,
                            vi = vi,
-                           method = "HS")$se.tau2) %>%
+                           method = "HS")$se.tau2,
+         HS.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "HS")$beta) %>%
   ungroup()
 
 ```
@@ -137,30 +150,86 @@ full = full %>%
                            method = "ML")$tau2,
          ML.se.tau2 = rma.uni(yi = yi,
                            vi = vi,
-                           method = "ML")$se.tau2) %>%
+                           method = "ML")$se.tau2,
+         ML.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "ML")$beta) %>%
   ungroup()
 
 ```
 
+```{r}
 
+### Add REML
+full = full %>%
+  group_by(my_ID) %>%
+  mutate(REML.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "REML", control=list(maxiter=1000))$tau2,
+         REML.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "REML", control=list(maxiter=1000))$se.tau2,
+         REML.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "REML", control=list(maxiter=1000))$beta) %>%
+  ungroup()
+
+```
 
 ```{r}
 
-full %>%
-  group_by(number_review) %>%
-  slice(1) %>%
-  ggplot(aes(x = PM.tau2)) +
-  geom_histogram(binwidth = .1)
+### Add Sidik-Jonkman
+full = full %>%
+  group_by(my_ID) %>%
+  mutate(SJ.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "SJ")$tau2,
+         SJ.se.tau2 = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "SJ")$se.tau2,
+         SJ.summary = rma.uni(yi = yi,
+                           vi = vi,
+                           method = "SJ")$beta) %>%
+  ungroup()
 
-test = full %>%
-  filter(DL.tau2 >2)
 
-mean(full$DL.tau2)
-sd(full$DL.tau2)
 ```
 
 
 
+
+
+```{r, fig.width=12}
+
+set.seed(100)
+full %>%
+  group_by(number_review) %>%
+  slice(1) %>%
+  ungroup() %>%
+  sample_n(size = 60) %>%
+  ggplot(aes(x = review)) +
+  geom_point(aes(y = PM.tau2), color = "red", shape = 15, size = 3) +
+  geom_point(aes(y = DL.tau2), color = "green", shape = 15, size = 3) +
+  geom_point(aes(y = SJ.tau2), color = "blue", shape = 15, size = 3) +
+  geom_point(aes(y = HE.tau2), color = "yellow", shape = 15, size = 3) +
+  geom_point(aes(y = HS.tau2), color = "purple", shape = 15, size = 3) +
+  geom_point(aes(y = ML.tau2), color = "orange", shape = 15, size = 3) +
+  geom_point(aes(y = REML.tau2), color = "black", shape = 15, size = 3) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ylab("Tau Squared") +
+  xlab("Cochrane Review") +
+  theme(text=element_text(size=12,  family="CM Sans"))
+  
+
+```
+
+
+```{r}
+
+
+
+```
 
 
 
