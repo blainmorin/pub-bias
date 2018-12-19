@@ -247,7 +247,7 @@ tau.estimates.plot = temp %>%
   geom_point(aes(y = REML.tau2, color = "REML"), shape = 15, size = 3) +
   scale_colour_manual(name = "Method:", values = cols) +
   theme_light() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
   ylab("Tau Squared") +
   xlab("Cochrane Review") +
   theme(text=element_text(size=12,  family="CM Sans"))
@@ -258,7 +258,6 @@ tau.estimates.plot = temp %>%
 ```{r}
 
 ### 60 Random study summary estimates plot
-set.seed(100)
 
 summary.estimates.plot = temp %>%
   ggplot(aes(x = review)) +
@@ -271,10 +270,11 @@ summary.estimates.plot = temp %>%
   geom_point(aes(y = REML.summary, color = "REML"), shape = 15, size = 3, alpha = .6) +
   scale_colour_manual(name = "Method:", values = cols) +
   theme_light() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
   ylab("log(Odds Ratio)") +
   xlab("Cochrane Review") +
   theme(text=element_text(size=12,  family="CM Sans"))
+
 
 ```
 
@@ -493,9 +493,73 @@ meta.n.density.plot = full %>%
 
 ```
 
+\newpage
+
 # Introduction
 
   Meta-analysis is the statistical method for analyzing data that comes from a synthesis of studies. It is often a key component of a systematic review. The aim is to summarize all of the available evidence in response to a research question. After identifying and screening all of the relevant studies, their data are extracted and meta-analytic techniques are used to quantitatively assess the evidence. Such analyses guide new research and allow their users to make fully informed and scientifically rigorous decisions.
+  
+&nbsp;
+  
+  Here is a simple example of an evidence synthesis:
+  
+```{r}
+
+### Random Forest Plot
+
+random.meta = full %>%
+  filter(my_ID == 6013)
+
+random.meta2 = rma.uni(measure = "OR", ai = random.meta$a,
+                           bi = random.meta$b,
+                           ci = random.meta$c,
+                           di = random.meta$d,
+                           slab = random.meta$study,
+                       method = "FE")
+par(family = 'CM Sans')
+forest(random.meta2, ilab = random.meta$n, ilab.xpos = -6)
+text(c(-6), 10.5, c("n"))
+title("Forest Plot: CD000561")
+
+```
+  
+  In the forest plot above, the question is: Do tricyclic antidepressants help elderly people who are depressed? The authors of the review identified 9 studies that examine tricyclic antidepressents. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53. exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
+  
+&nbsp;
+  
+  An odds ratio of .08 strongly favors the tricyclic antidepressant treatment. However, it is clear in the forest plot that this is the most extreme treatment effect estimate. The Georgotas study's sample size is only 52. It may be because of random chance that the treatment is so effective. In the forest plot above, 6 of the 9 studies' confidence intervals cross the zero line (which represents an odds ratio of 1). Because the zero line represents the null hypothesis, these 6 studies are thus not statistically significant at the .05 level. One of the takeaway messages from examing the forest plot is that simply looking at statistical significance of individual studies is not sufficient for summarizing evidence. In this case, all of the studies favor the treatment. If the individual studies are underpowered, a clinically important effect may be missed if the relevant data is not aggregated.
+  
+&nbsp;
+  
+  The diamond at the bottom of the forest plot represents the meta-analysis estimate and confidence interval. Here, the estimate comes from a fixed effect model. In this example, the meta-analysis estimate is -1.15, which corresponds to an odds ratio of exp(-1.15) = .316 (the treatment is associated with a 68% reduction in the odds of being dpressed). The meta-analysis treatment effect estimate is statistically significant. The confidence interval of the estimate (the width of the diamond in the forest plot) is smaller than any of the individual studies. In other words, the aggregate estimate is more precise. 
+  
+&nbsp;
+
+  The meta-analysis estimate is a weighted mean of the individual study estimates. In the forest plot above, the relative weight given to each individual study in the calculation of the aggregate estimate is represented by the size of the square. How are these weights calcuated?
+  
+# Fixed Effect vs Random Effects 
+
+## Fixed Effects Models
+
+  The weighting schemes come in two flavors: fixed effect models and random effects models. The fixed effect model assumes that all of the studies share a common effect. For example, suppose a college wants to know the average math aptitude score of its students. Due to budget, time or space constraints, the school cannot expect to administer the math test to the entire college. Instead, they administer the test to five random samples of students. Each of the testing sessions is considered to be a "study."
+  
+&nbsp;
+
+  Assuming each of the testing session were similar, it makes sense to think that each of the “studies” is a random sample from a common population (all the students at the college). In this case, the weighted average is a relatively straightforward calculation: the studies with more precision (lower variance) get higher weight. Since sample size is the primary driver for precision, studies with higher sample sizes get more weight. Here is the idea expressed mathematically:
+  
+$$ \theta_{FE} = \dfrac{\sum{w_{iFE}}*y_i}{\sum{w_{iFE}}}, w_{iFE} = 1 / v_i   $$
+
+The fixed effect meta-analysis estimate of the effect size, $\theta_{FE}$, is equal to the weighted mean of the individual study estimates, $y_i$. The weights for the fixed effect model are $1/v_i$, where $v_i$ is the variance of the individual study estimate. As the variance of a study estimate increases, the weight it it given in the summary effect calculation decreases.  
+
+
+
+## Random Effects Models
+
+  
+  
+  
+  
+  
   
 
 # Data and Data Cleaning
@@ -511,6 +575,8 @@ Overall, the cleaned data contains analyses from 1,415 reviews. The smallest met
 
 # Exploritory Analysis
 
+
+
 ```{r}
 n.studies.hist
 ```
@@ -524,7 +590,7 @@ meta.n.density.plot
 
 ```{r, results = 'asis'}
 stargazer(sums4, header = FALSE,
-          summary = FALSE)
+          summary = FALSE, table.placement = 'H')
 ```
 
 ```{r}
@@ -551,14 +617,20 @@ p.diff.plot
 
 ```{r}
 
-test = full.long %>%
-  group_by(my_ID) %>%
+test = full %>%
+  gather(key = "mod", value = "taus", DL.tau2, PM.tau2,
+         HE.tau2, HS.tau2, ML.tau2, REML.tau2, SJ.tau2) %>%
+  group_by(my_ID, mod) %>%
   slice(1) %>%
   ungroup()
 
-test2 = glm(p.diff ~ correct_no_of_studies*meta.n, data = test, family = quasibinomial)
-summary(test2)
+test1 = test %>%
+  group_by(my_ID) %>%
+  mutate(differ = max(taus) - min(taus)) %>%
+  slice(1)
 
+test2 = lm(differ ~ log(meta.n), data = test1)
+summary(test2)
 ```
 
 
