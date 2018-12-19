@@ -1,11 +1,19 @@
 ---
-title: "Final Project"
+title: \vspace{2in} Estimating Study Heterogeneity 
+subtitle: "PHP 2550: Final Project"
 author: "Blain Morin"
-date: "December 17, 2018"
-output: pdf_document
+date: "December 19, 2018"
+indent: true
+output: 
+  pdf_document:
+    toc: true
 header-includes:
 - \usepackage{float}
+- \usepackage{indentfirst}
 ---
+
+&nbsp;
+
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -18,8 +26,12 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 library(extrafont)
+library(stargazer)
 library(tidyr)
 library(metafor)
+
+### set seed
+set.seed(100)
 
 ### Load Data
 full = read_delim("2010_6.csv", "\t", 
@@ -29,7 +41,7 @@ full = read_delim("2010_6.csv", "\t",
 
 ```{r}
 
-### Get smaller data
+### Exclude studies with .5s
 full = full %>%
   filter(a > 1,
          b > 1,
@@ -198,31 +210,71 @@ full = full %>%
 ```
 
 
+```{r}
+
+### Set plot colors
+cols <- c("DerSimonian-Laird" = "green",
+          "Hedges" = "yellow",
+          "Hunter-Schmidt" = "purple",
+          "Sidik-Jonkman" = "blue",
+          "Maximum-Likelihood" = "orange",
+          "REML" = "black",
+          "Paule-Mandel" = "red")
 
 
+```
 
-```{r, fig.width=12, fig.height=10}
 
+```{r}
+
+### 60 Random study tau estimates plot
 set.seed(100)
-full %>%
+
+temp = full %>%
   group_by(number_review) %>%
   slice(1) %>%
   ungroup() %>%
-  sample_n(size = 60) %>%
+  sample_n(size = 60)
+
+tau.estimates.plot = temp %>%
   ggplot(aes(x = review)) +
-  geom_point(aes(y = PM.tau2), color = "red", shape = 15, size = 3) +
-  geom_point(aes(y = DL.tau2), color = "green", shape = 15, size = 3) +
-  geom_point(aes(y = SJ.tau2), color = "blue", shape = 15, size = 3) +
-  geom_point(aes(y = HE.tau2), color = "yellow", shape = 15, size = 3) +
-  geom_point(aes(y = HS.tau2), color = "purple", shape = 15, size = 3) +
-  geom_point(aes(y = ML.tau2), color = "orange", shape = 15, size = 3) +
-  geom_point(aes(y = REML.tau2), color = "black", shape = 15, size = 3) +
+  geom_point(aes(y = PM.tau2, color = "Paule-Mandel"), shape = 15, size = 3) +
+  geom_point(aes(y = DL.tau2, color = "DerSimonian-Laird"), shape = 15, size = 3) +
+  geom_point(aes(y = SJ.tau2, color = "Sidik-Jonkman"), shape = 15, size = 3) +
+  geom_point(aes(y = HE.tau2, color = "Hedges"), shape = 15, size = 3) +
+  geom_point(aes(y = HS.tau2, color = "Hunter-Schmidt"), shape = 15, size = 3) +
+  geom_point(aes(y = ML.tau2, color = "Maximum-Likelihood"), shape = 15, size = 3) +
+  geom_point(aes(y = REML.tau2, color = "REML"), shape = 15, size = 3) +
+  scale_colour_manual(name = "Method:", values = cols) +
   theme_light() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ylab("Tau Squared") +
   xlab("Cochrane Review") +
   theme(text=element_text(size=12,  family="CM Sans"))
   
+
+```
+
+```{r}
+
+### 60 Random study summary estimates plot
+set.seed(100)
+
+summary.estimates.plot = temp %>%
+  ggplot(aes(x = review)) +
+  geom_point(aes(y = PM.summary, color = "Paule-Mandel"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = DL.summary, color = "DerSimonian-Laird"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = SJ.summary, color = "Sidik-Jonkman"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = HE.summary, color = "Hedges"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = HS.summary, color = "Hunter-Schmidt"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = ML.summary, color = "Maximum-Likelihood"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = REML.summary, color = "REML"), shape = 15, size = 3, alpha = .6) +
+  scale_colour_manual(name = "Method:", values = cols) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ylab("log(Odds Ratio)") +
+  xlab("Cochrane Review") +
+  theme(text=element_text(size=12,  family="CM Sans"))
 
 ```
 
@@ -248,18 +300,265 @@ full.long = full.long %>%
   mutate(p.diff = diff/max(abs.sum)) %>%
   ungroup()
 
-full.long %>%
+### Proportionate Difference Plot
+p.diff.plot = full.long %>%
   group_by(my_ID) %>%
   slice(1) %>%
-  ggplot(aes(x = p.diff, y = ..density..)) +
+  ggplot(aes(x = p.diff)) +
   geom_histogram(binwidth = .1, fill = "white", color = "black") +
   theme_light() +
+  scale_x_continuous(breaks = seq(0, 1, .1)) +
   xlab("Proportionate Difference") +
-  ylab("Density") +
+  ylab("Count") +
   theme(text=element_text(size=12,  family="CM Sans"))
 
 ```
 
+```{r}
 
+sums = full %>%
+  group_by(my_ID) %>%
+  slice(1) %>%
+  ungroup()
+
+sums1 = sums %>%
+  select(DL.tau2, HE.tau2,
+         HS.tau2, SJ.tau2,
+         ML.tau2, REML.tau2,
+         PM.tau2) %>%
+  summarise(meanDL = mean(DL.tau2),
+            meanHE = mean(HE.tau2),
+            meanHS = mean(HS.tau2),
+            meanSJ = mean(SJ.tau2),
+            meanML = mean(ML.tau2),
+            meanREML = mean(REML.tau2),
+            meanPM = mean(PM.tau2))
+
+sums2 = sums %>%
+  select(DL.tau2, HE.tau2,
+         HS.tau2, SJ.tau2,
+         ML.tau2, REML.tau2,
+         PM.tau2) %>%
+  summarise(sdDL = sd(DL.tau2),
+            sdHE = sd(HE.tau2),
+            sdHS = sd(HS.tau2),
+            sdSJ = sd(SJ.tau2),
+            sdML = sd(ML.tau2),
+            sdREML = sd(REML.tau2),
+            sdPM = sd(PM.tau2))
+
+sums3 = sums %>%
+  select(DL.tau2, HE.tau2,
+         HS.tau2, SJ.tau2,
+         ML.tau2, REML.tau2,
+         PM.tau2) %>%
+  summarise(maxDL = max(DL.tau2),
+            maxHE = max(HE.tau2),
+            maxHS = max(HS.tau2),
+            maxSJ = max(SJ.tau2),
+            maxML = max(ML.tau2),
+            maxREML = max(REML.tau2),
+            maxPM = max(PM.tau2))
+
+sums4 = cbind(t(sums1), t(sums2), t(sums3))
+
+row.names(sums4) = c("DerSimonian-Laird",
+                     "Hedges",
+                     "Hunter-Schmidt",
+                     "Sidik-Jonkman",
+                     "Maximum-Likelihood",
+                     "REML",
+                     "Paule-Mandel")
+
+sums4 = as.data.frame(sums4)
+
+sums4 = sums4 %>%
+  rename(Mean.Tau2 = V1, Sd.Tau2 = V2, Max.Tau2 = V3)
+
+```
+
+```{r}
+
+### Tau squared densities
+
+tau.square.density.plot = full %>%
+  group_by(my_ID) %>%
+  mutate(DL.tau2 = DL.tau2 + .0001,
+         HE.tau2 = HE.tau2 + .0001,
+         HS.tau2 = HS.tau2 + .0001,
+         SJ.tau2 = SJ.tau2 + .0001,
+         ML.tau2 = ML.tau2 + .0001,
+         REML.tau2 = REML.tau2 + .0001,
+         PM.tau2 = PM.tau2 + .0001) %>%
+  slice(1) %>%
+  ungroup %>%
+  ggplot() +
+  geom_line(aes(x = log(DL.tau2), color = "DerSimonian-Laird"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(HE.tau2), color = "Hedges"), size = 2, stat = "density", alpha = .6) +
+  geom_line(aes(x = log(HS.tau2), color = "Hunter-Schmidt"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(SJ.tau2), color = "Sidik-Jonkman"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(ML.tau2), color = "Maximum-Likelihood"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(REML.tau2), color = "REML"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(PM.tau2), color = "Paule-Mandel"), stat = "density", size = 2, alpha = .6) +
+  theme_light() +
+  scale_color_manual(name = "Method:", values = cols) +
+  ylab("Density") +
+  xlab("log(Tau Squared)") 
+  
+```
+
+```{r}
+
+tau.se.density.plot = full %>%
+  group_by(my_ID) %>%
+  mutate(DL.tau2 = DL.tau2 + .0001,
+         HE.tau2 = HE.tau2 + .0001,
+         HS.tau2 = HS.tau2 + .0001,
+         SJ.tau2 = SJ.tau2 + .0001,
+         ML.tau2 = ML.tau2 + .0001,
+         REML.tau2 = REML.tau2 + .0001,
+         PM.tau2 = PM.tau2 + .0001) %>%
+  slice(1) %>%
+  ungroup %>%
+  ggplot() +
+  geom_line(aes(x = log(DL.se.tau2), color = "DerSimonian-Laird"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(HE.se.tau2), color = "Hedges"), size = 2, stat = "density", alpha = .6) +
+  geom_line(aes(x = log(HS.se.tau2), color = "Hunter-Schmidt"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(SJ.se.tau2), color = "Sidik-Jonkman"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(ML.se.tau2), color = "Maximum-Likelihood"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(REML.se.tau2), color = "REML"), stat = "density", size = 2, alpha = .6) +
+  geom_line(aes(x = log(PM.se.tau2), color = "Paule-Mandel"), stat = "density", size = 2, alpha = .6) +
+  theme_light() +
+  scale_color_manual(name = "Method:", values = cols) +
+  ylab("Density") +
+  xlab("log(Tau Squared SE)") 
+  
+  
+  
+  
+```
+
+```{r}
+
+# ### Forest plot for highest tau
+# high.tau.forest = full %>%
+#   filter(my_ID == 39123)
+# 
+# high.tau.forest2 = rma.uni(measure = "OR", ai = high.tau.forest$a,
+#                            bi = high.tau.forest$b,
+#                            ci = high.tau.forest$c, 
+#                            di = high.tau.forest$d, 
+#                            slab = high.tau.forest$study)
+# 
+# forest(high.tau.forest2, ilab = high.tau.forest$n, ilab.xpos = -6)
+# text(c(-6), 12, c("n"))
+# title("Forest Plot for CD005089")
+
+```
+
+```{r}
+
+n.studies.hist = full %>%
+  group_by(number_review) %>%
+  slice(1) %>%
+  ungroup() %>%
+  filter(correct_no_of_studies < 75) %>%
+  ggplot(aes(x = correct_no_of_studies)) +
+  geom_histogram(binwidth = 5, color = "black", fill = "white") +
+  theme_light() +
+  scale_color_manual(name = "Method:", values = cols) +
+  ylab("Count") +
+  xlab("Number of Studies in the Meta-Analysis") +
+  theme(text=element_text(size=12,  family="CM Sans")) +
+  scale_x_continuous(breaks = seq(0, 75, 5))
+
+
+```
+
+
+```{r}
+
+meta.n.density.plot = full %>%
+  group_by(number_review) %>%
+  slice(1) %>%
+  ungroup() %>%
+  filter(meta.n < 50000) %>%
+  ggplot(aes(x = meta.n)) +
+  geom_density(color = "black", fill = "white") +
+  theme_light() +
+  scale_color_manual(name = "Method:", values = cols) +
+  ylab("Count") +
+  xlab("Meta Sample Size")  +
+  theme(text=element_text(size=12,  family="CM Sans"))
+
+```
+
+# Introduction
+
+  Meta-analysis is the statistical method for analyzing data that comes from a synthesis of studies. It is often a key component of a systematic review. The aim is to summarize all of the available evidence in response to a research question. After identifying and screening all of the relevant studies, their data are extracted and meta-analytic techniques are used to quantitatively assess the evidence. Such analyses guide new research and allow their users to make fully informed and scientifically rigorous decisions.
+  
+
+# Data and Data Cleaning
+
+The raw data for this analysis was extracted from The Cochrane Database of Systematic Reviews (CDSR). The CDSR contains peer-reviewed and high quality healthcare systematic reviews conducted by Cochrane Review groups. The data contain all reviews with binary outcomes from 2003 to 2010. 
+
+
+Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were filtered out. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected per each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible. 
+
+
+Overall, the cleaned data contains analyses from 1,415 reviews. The smallest meta sample is 93 and the largest is 3,231,551. The highest number of studies used in an analysis is 489. 
+
+
+# Exploritory Analysis
+
+```{r}
+n.studies.hist
+```
+
+```{r}
+meta.n.density.plot
+```
+
+
+# Analysis
+
+```{r, results = 'asis'}
+stargazer(sums4, header = FALSE,
+          summary = FALSE)
+```
+
+```{r}
+tau.square.density.plot
+```
+
+```{r}
+tau.se.density.plot
+```
+
+```{r, fig.height=8, fig.width=12}
+tau.estimates.plot
+```
+
+```{r, fig.height=8, fig.width=12}
+summary.estimates.plot
+```
+
+
+```{r}
+p.diff.plot
+```
+
+
+```{r}
+
+test = full.long %>%
+  group_by(my_ID) %>%
+  slice(1) %>%
+  ungroup()
+
+test2 = glm(p.diff ~ correct_no_of_studies*meta.n, data = test, family = quasibinomial)
+summary(test2)
+
+```
 
 
