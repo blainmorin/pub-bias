@@ -523,19 +523,19 @@ title("Forest Plot: CD000561")
 
 ```
   
-  In the forest plot above, the question is: Do tricyclic antidepressants help elderly people who are depressed? The authors of the review identified 9 studies that examine tricyclic antidepressents. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53. exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
+  In the forest plot above, the question is: Do tricyclic antidepressants help elderly people who are depressed? The authors of the review identified 9 studies that examine tricyclic antidepressants. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53. exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
   
 &nbsp;
   
-  An odds ratio of .08 strongly favors the tricyclic antidepressant treatment. However, it is clear in the forest plot that this is the most extreme treatment effect estimate. The Georgotas study's sample size is only 52. It may be because of random chance that the treatment is so effective. In the forest plot above, 6 of the 9 studies' confidence intervals cross the zero line (which represents an odds ratio of 1). Because the zero line represents the null hypothesis, these 6 studies are thus not statistically significant at the .05 level. One of the takeaway messages from examing the forest plot is that simply looking at statistical significance of individual studies is not sufficient for summarizing evidence. In this case, all of the studies favor the treatment. If the individual studies are underpowered, a clinically important effect may be missed if the relevant data is not aggregated.
+  An odds ratio of .08 strongly favors the tricyclic antidepressant treatment. However, it is clear in the forest plot that this is the most extreme treatment effect estimate. The Georgotas study's sample size is only 52. It may be because of random chance that the treatment is so effective. In the forest plot above, 6 of the 9 studies' confidence intervals cross the zero line (which represents an odds ratio of 1). Because the zero line represents the null hypothesis, these 6 studies are thus not statistically significant at the .05 level. One of the takeaway messages from examining the forest plot is that simply looking at statistical significance of individual studies is not sufficient for summarizing evidence. In this case, all of the studies favor the treatment. If the individual studies are under powered, a clinically important effect may be missed if the relevant data is not aggregated.
   
 &nbsp;
   
-  The diamond at the bottom of the forest plot represents the meta-analysis estimate and confidence interval. Here, the estimate comes from a fixed effect model. In this example, the meta-analysis estimate is -1.15, which corresponds to an odds ratio of exp(-1.15) = .316 (the treatment is associated with a 68% reduction in the odds of being dpressed). The meta-analysis treatment effect estimate is statistically significant. The confidence interval of the estimate (the width of the diamond in the forest plot) is smaller than any of the individual studies. In other words, the aggregate estimate is more precise. 
+  The diamond at the bottom of the forest plot represents the meta-analysis estimate and confidence interval. Here, the estimate comes from a fixed effect model. In this example, the meta-analysis estimate is -1.15, which corresponds to an odds ratio of exp(-1.15) = .316 (the treatment is associated with a 68% reduction in the odds of being depressed). The meta-analysis treatment effect estimate is statistically significant. The confidence interval of the estimate (the width of the diamond in the forest plot) is smaller than any of the individual studies. In other words, the aggregate estimate is more precise. 
   
 &nbsp;
 
-  The meta-analysis estimate is a weighted mean of the individual study estimates. In the forest plot above, the relative weight given to each individual study in the calculation of the aggregate estimate is represented by the size of the square. How are these weights calcuated?
+  The meta-analysis estimate is a weighted mean of the individual study estimates. In the forest plot above, the relative weight given to each individual study in the calculation of the aggregate estimate is represented by the size of the square. How are these weights calculated?
   
 # Fixed Effect vs Random Effects 
 
@@ -549,13 +549,23 @@ title("Forest Plot: CD000561")
   
 $$ \theta_{FE} = \dfrac{\sum{w_{iFE}}*y_i}{\sum{w_{iFE}}}, w_{iFE} = 1 / v_i   $$
 
-The fixed effect meta-analysis estimate of the effect size, $\theta_{FE}$, is equal to the weighted mean of the individual study estimates, $y_i$. The weights for the fixed effect model are $1/v_i$, where $v_i$ is the variance of the individual study estimate. As the variance of a study estimate increases, the weight it it given in the summary effect calculation decreases.  
+The fixed effect meta-analysis estimate of the effect size, $\theta_{FE}$, is equal to the weighted mean of the individual study estimates, $y_i$. The weights for the fixed effect model are $1/v_i$, where $v_i$ is the variance of the individual study estimate. As the variance of a study estimate increases, the weight it it given in the summary effect calculation decreases. 
 
+&nbsp;
 
+Because all of the studies in the fixed effect model share a common effect, the only source of variation is sampling error. If each of the individual studies were to increase its sample size, they would all approach the same $\theta_{FE}$.
 
 ## Random Effects Models
 
+The weighting scheme for the random effects model does not assume that each study in the review shares a common effect. Though studies may be conceptually similar, their characteristics are likely not identical. Returning to the math test example, suppose the reviewer was instead interested in the math aptitude score of all college students. After searching the literature, they find the results from three different schools which administered the test to a random sample of their students. In this case, the obvious difference between the studies is that they are sampling from different populations of students. Because the true mean math aptitude score is different between different schools, each study is thus estimating a different true mean. 
+
+&nbsp;
+
+Because the studies in a random effect model do not share a common effect, each study estimate approaches a different $\theta$ as their sample size increase. Thus, the idea of the random effects model is not to estimate a single $\theta$ but instead to estimate the distribution of true $\theta$s. There are two sources of variation in the random effects model: sampling error and between study heterogeneity. Here is how between study heterogeneity factors into the weighting scheme:
+
+$$ \mu_{RE} = \dfrac{\sum{w_{iRE}}*y_i}{\sum{w_{iRE}}}, w_{iRE} = 1 / (v_i +  \tau^2)  $$
   
+Instead of estimating a single $\theta$, the random effects model estimates a mean ($\mu_{RE}$) of $\theta$s. $\mu_{RE}$ is still a weighted average of the individual study estimates like in the fixed effect model, but here the weights include the extra between study variance, $\tau^2$.
   
   
   
@@ -567,7 +577,7 @@ The fixed effect meta-analysis estimate of the effect size, $\theta_{FE}$, is eq
 The raw data for this analysis was extracted from The Cochrane Database of Systematic Reviews (CDSR). The CDSR contains peer-reviewed and high quality healthcare systematic reviews conducted by Cochrane Review groups. The data contain all reviews with binary outcomes from 2003 to 2010. 
 
 
-Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were filtered out. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected per each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible. 
+Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were omitted. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected per each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible. 
 
 
 Overall, the cleaned data contains analyses from 1,415 reviews. The smallest meta sample is 93 and the largest is 3,231,551. The highest number of studies used in an analysis is 489. 
