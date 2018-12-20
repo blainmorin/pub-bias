@@ -12,8 +12,6 @@ header-includes:
 - \usepackage{indentfirst}
 ---
 
-&nbsp;
-
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -29,6 +27,7 @@ library(extrafont)
 library(stargazer)
 library(tidyr)
 library(metafor)
+library(kableExtra)
 
 ### set seed
 set.seed(100)
@@ -250,6 +249,7 @@ tau.estimates.plot = temp %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
   ylab("Tau Squared") +
   xlab("Cochrane Review") +
+  ggtitle("Tau Squared Estimates for 60 Random Analyses") +
   theme(text=element_text(size=12,  family="CM Sans"))
   
 
@@ -458,6 +458,7 @@ tau.se.density.plot = full %>%
 
 ```{r}
 
+### Number of studies histogram
 n.studies.hist = full %>%
   group_by(number_review) %>%
   slice(1) %>%
@@ -469,6 +470,7 @@ n.studies.hist = full %>%
   scale_color_manual(name = "Method:", values = cols) +
   ylab("Count") +
   xlab("Number of Studies in the Meta-Analysis") +
+  ggtitle("Histogram: Number of Studies in Largest Meta-Analysis") +
   theme(text=element_text(size=12,  family="CM Sans")) +
   scale_x_continuous(breaks = seq(0, 75, 5))
 
@@ -477,6 +479,8 @@ n.studies.hist = full %>%
 
 
 ```{r}
+
+### Sample size density plot
 
 meta.n.density.plot = full %>%
   group_by(number_review) %>%
@@ -489,7 +493,9 @@ meta.n.density.plot = full %>%
   scale_color_manual(name = "Method:", values = cols) +
   ylab("Count") +
   xlab("Meta Sample Size")  +
+  ggtitle("Density Plot: Meta Sample Size") +
   theme(text=element_text(size=12,  family="CM Sans"))
+
 
 ```
 
@@ -503,7 +509,7 @@ meta.n.density.plot = full %>%
   
   Here is a simple example of an evidence synthesis:
   
-```{r}
+```{r, fig.height=4, fig.width=6}
 
 ### Random Forest Plot
 
@@ -523,7 +529,7 @@ title("Forest Plot: CD000561")
 
 ```
   
-  In the forest plot above, the question is: Do tricyclic antidepressants help elderly people who are depressed? The authors of the review identified 9 studies that examine tricyclic antidepressants. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53. exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
+  In the forest plot above, the research question is: Do tricyclic antidepressants help elderly people who are depressed? The authors of the review identified 9 studies that examine tricyclic antidepressants. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53. exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
   
 &nbsp;
   
@@ -566,37 +572,154 @@ Because the studies in a random effect model do not share a common effect, each 
 $$ \mu_{RE} = \dfrac{\sum{w_{iRE}}*y_i}{\sum{w_{iRE}}}, w_{iRE} = 1 / (v_i +  \tau^2)  $$
   
 Instead of estimating a single $\theta$, the random effects model estimates a mean ($\mu_{RE}$) of $\theta$s. $\mu_{RE}$ is still a weighted average of the individual study estimates like in the fixed effect model, but here the weights include the extra between study variance, $\tau^2$.
-  
-  
-  
-  
-  
 
-# Data and Data Cleaning
+&nbsp;
 
-The raw data for this analysis was extracted from The Cochrane Database of Systematic Reviews (CDSR). The CDSR contains peer-reviewed and high quality healthcare systematic reviews conducted by Cochrane Review groups. The data contain all reviews with binary outcomes from 2003 to 2010. 
+In systematic reviews, there is usually no obvious reason to assume that each study pulled from the literature shares a common treatment effect. Therefore, the random effects model is usually the best choice. 
+
+# Estimating $\tau^2$
+
+A variety of methods have been proposed for estimating between study hetergeneity. In this paper, only methods that have been implemented in R's *metafor* package are examined. The seven methods that are empirically compared in this paper are: DerSimonian and Laird, Paule and Mandel, Hedges, Hunter and Schmidt, Maximum Likelihood, Restricted Maximum Likelihood, and Sidik and Jonkman. 
+
+* DerSimonian and Laird (1986):
+
+$$ \hat{\tau}^2_{DL} =  max\left(0,\frac{Q-df}{\sum w_{iFE} - \frac{\sum w^2_iFE}{\sum w_iFE} } \right) $$ 
+
+* Paule and Mandel (1982):
+
+$$  Q_{gen} = \sum w_{iRE} (y_i - \hat{\mu}_{RE}(\tau^2)) ^2 $$
+
+* Hedges (1985):
+
+$$ \hat{\tau}^2_H = max \left( 0, \frac{1}{df} \sum (y_i - \bar{y})^2 - \frac{1}{df+1} \sum v_i   \right)   $$
 
 
-Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were omitted. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected per each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible. 
+* Hunter and Schmidt (2004):
 
+$$  \hat{\tau}^2_{HS} = max \left(  0, \frac{Q-(df+1)}{\sum w_{iFE}} \right) $$
 
-Overall, the cleaned data contains analyses from 1,415 reviews. The smallest meta sample is 93 and the largest is 3,231,551. The highest number of studies used in an analysis is 489. 
+* Maximum Likelihood
 
+$$\hat{\tau}^2_{ML} = max \left( 0 , \frac{\sum w^2_{iRE}((y_i - \hat{\mu}_{RE}(\hat{\tau}^2_{ML}))^2 - v_i)}{\sum w^2_{iRE}}  \right)$$
 
-# Exploritory Analysis
+* Restricted Maximum Likelihood
+
+$$\hat{\tau}^2_{REML} = max \left( 0 , \frac{\sum w^2_{iRE}((y_i - \hat{\mu}_{RE}(\hat{\tau}^2_{REML}))^2 - v_i)}{\sum w^2_{iRE}} + \frac{1}{\sum w_{iRE}}  \right)$$
+
+* Sidik and Jonkman (2005):
+
+$$ \hat{\tau}^2_{SJ} = \frac{1}{k-1} \sum \hat{q}^{-1}_i (y_i - \hat{\mu}_{\hat{q}RE})   $$
+
+where
+
+$$  \hat {q}_i = \hat{r}_i + 1, \hat{r}_i = v_i / \hat{\tau}^2_0 $$
 
 
 
 ```{r}
-n.studies.hist
+
+model.names = c("DerSimonian and Laird",
+                "Paule and Mandel",
+                "Hedges",
+                "Hunter and Schmidt",
+                "Maximum Likelihood",
+                "Restricted Maximum Likelihood",
+                "Sidik and Jonkman")
+
+model.des = c("MOM, Compares the observed Cochrane Q statistic to the expected Q statistic",
+              "Iterative GMM, with Q weights = 1/(v + tau^2)",
+              "MOM, Compares observed sample variance to the expected sample variance",
+              "",
+              "",
+                "Restricted Maximum LikelihoodDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and Laird",
+                "Sidik and JonkmanDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and Laird")
+
+
+tau.model.sums = data.frame(Method = model.names, 
+                            Description = model.des
+                            )
+
+kable(tau.model.sums, format = "latex") %>%
+  column_spec(1, "1in") %>%
+  column_spec(2, "2in")
+
 ```
 
-```{r}
+
+  
+  
+  
+
+# Empirical Analysis
+
+## Data and Data Cleaning
+
+The raw data for this analysis was extracted from The Cochrane Database of Systematic Reviews (CDSR). The CDSR contains peer-reviewed and high quality healthcare systematic reviews conducted by Cochrane Review groups. The data contain all reviews with binary outcomes from January 2003 to July 2010, a total of 3,082 systematic reviews. 
+
+&nbsp;
+
+Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were omitted. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected per each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible.
+
+&nbsp;
+
+After the exclusion process, our final data contained the data largest meta-analysis from a total of 1,415 reviews. 
+
+
+## Exploritory Data Analysis
+
+We first examine the distribution of the number of studies used in the largest meta analysis for each review (analyses with less than 5 studies were excluded during data cleaning):
+
+```{r, cache=FALSE}
+
+n.studies.hist
+
+```
+
+We see that most of the analyses contain between 5 and 10 studies. The median number of studies used in the meta-analysis is 9. The largest meta-analysis (in terms of number of studies) is CD004125. It compares drugs for preventing post operative nausea and contains 489 studies (not pictured). 
+
+&nbsp;
+
+We then examine the distribution of the meta sample size for each meta-analysis:
+
+```{r, cache=FALSE}
 meta.n.density.plot
 ```
 
+The smallest meta sample is 93 and the largest is 3,231,551 (not pictured). The median sample size is 1,743. The largest meta-analysis (in terms of sample size) is CD000974. It examines the effictiveness of Cholera vaccines. 
 
-# Analysis
+&nbsp;
+
+We also count the number of times each model was used for the analysis in the original review:
+
+```{r, results = 'asis'}
+
+testing = full %>% group_by(my_ID) %>% slice(1) %>% ungroup()
+testing$analysis_model = as.factor(testing$analysis_model)
+fix.rand.table = data.frame("Fixed Effect" = 1206, "Random Effects" = 579)
+
+stargazer(fix.rand.table, header = FALSE,
+          rownames = FALSE, table.placement = 'H',
+          summary = FALSE,
+          title = "Counts for Each Analysis Model ")
+
+```
+
+We see that even though the random effects model is recommended for systematic reviews, it is only used in 32% of the meta-analyses. 
+
+## Analysis
+
+For each of the 1,415 reviews, we conduct a random effects meta-analysis to estimate the summary effect. We elected to use odds-ratios as our summary measure. For each meta-analysis, we used each of the 7 between-study variance estimation methods and stored the overall summary estimate, the estimate for $\tau^2$, and the estimate for the standard error of $\tau^2$. 
+
+&nbsp;
+
+We first look at the differences in the $\tau^2$ estimates for 60 randomly selected meta-analyses:
+
+```{r, fig.height=8, fig.width=12, cache = FALSE}
+tau.estimates.plot
+```
+
+
+
 
 ```{r, results = 'asis'}
 stargazer(sums4, header = FALSE,
@@ -611,9 +734,7 @@ tau.square.density.plot
 tau.se.density.plot
 ```
 
-```{r, fig.height=8, fig.width=12}
-tau.estimates.plot
-```
+
 
 ```{r, fig.height=8, fig.width=12}
 summary.estimates.plot
@@ -641,6 +762,7 @@ test1 = test %>%
 
 test2 = lm(differ ~ log(meta.n), data = test1)
 summary(test2)
+
 ```
 
 
