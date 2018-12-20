@@ -1,5 +1,5 @@
 ---
-title: \vspace{2in} Estimating Study Heterogeneity 
+title: \vspace{1.5in} An Empirical Comparison of Study Heterogeneity Estimators
 subtitle: "PHP 2550: Final Project"
 author: "Blain Morin"
 date: "December 19, 2018"
@@ -261,20 +261,20 @@ tau.estimates.plot = temp %>%
 
 summary.estimates.plot = temp %>%
   ggplot(aes(x = review)) +
-  geom_point(aes(y = PM.summary, color = "Paule-Mandel"), shape = 15, size = 3, alpha = .6) +
-  geom_point(aes(y = DL.summary, color = "DerSimonian-Laird"), shape = 15, size = 3, alpha = .6) +
-  geom_point(aes(y = SJ.summary, color = "Sidik-Jonkman"), shape = 15, size = 3, alpha = .6) +
-  geom_point(aes(y = HE.summary, color = "Hedges"), shape = 15, size = 3, alpha = .6) +
-  geom_point(aes(y = HS.summary, color = "Hunter-Schmidt"), shape = 15, size = 3, alpha = .6) +
-  geom_point(aes(y = ML.summary, color = "Maximum-Likelihood"), shape = 15, size = 3, alpha = .6) +
-  geom_point(aes(y = REML.summary, color = "REML"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(PM.summary), color = "Paule-Mandel"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(DL.summary), color = "DerSimonian-Laird"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(SJ.summary), color = "Sidik-Jonkman"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(HE.summary), color = "Hedges"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(HS.summary), color = "Hunter-Schmidt"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(ML.summary), color = "Maximum-Likelihood"), shape = 15, size = 3, alpha = .6) +
+  geom_point(aes(y = exp(REML.summary), color = "REML"), shape = 15, size = 3, alpha = .6) +
   scale_colour_manual(name = "Method:", values = cols) +
   theme_light() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
-  ylab("log(Odds Ratio)") +
+  ylab("Odds Ratio") +
   xlab("Cochrane Review") +
+  ggtitle("Summary Effect Estimates for 60 Random Analyses") +
   theme(text=element_text(size=12,  family="CM Sans"))
-
 
 ```
 
@@ -310,6 +310,7 @@ p.diff.plot = full.long %>%
   scale_x_continuous(breaks = seq(0, 1, .1)) +
   xlab("Proportionate Difference") +
   ylab("Count") +
+  ggtitle("Histogram: Proportionate Difference Between \nMin and Max Summary Estimates") +
   theme(text=element_text(size=12,  family="CM Sans"))
 
 ```
@@ -534,11 +535,11 @@ title("Forest Plot: CD000561")
 
 ```
   
-  In the forest plot above, the research question is: Do tricyclic antidepressants help elderly people who are depressed? The authors of the review identified 9 studies that examine tricyclic antidepressants. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53. exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
+  In the forest plot above, the research question is: Do tricyclic antidepressants (TCA) help elderly people who are depressed? The authors of the review identified 9 studies that examine TCA. The forest plot displays the name, sample size, and study-level effect measures. For this review, the study level estimates are log odds ratios of being depressed. Log odds ratios are converted to odds ratios through exponentiating the estimate. For example, the Georgotas 1986 reports a log odds ratio of -2.53: exp(-2.53) = .08. In other words, the odds of staying depressed for people who were taking tricyclic antidepressants were  .08 times the odds of people who were taking the placebo (92% reduction in the odds of being depressed).
   
 &nbsp;
   
-  An odds ratio of .08 strongly favors the tricyclic antidepressant treatment. However, it is clear in the forest plot that this is the most extreme treatment effect estimate. The Georgotas study's sample size is only 52. It may be because of random chance that the treatment is so effective. In the forest plot above, 6 of the 9 studies' confidence intervals cross the zero line (which represents an odds ratio of 1). Because the zero line represents the null hypothesis, these 6 studies are thus not statistically significant at the .05 level. One of the takeaway messages from examining the forest plot is that simply looking at statistical significance of individual studies is not sufficient for summarizing evidence. In this case, all of the studies favor the treatment. If the individual studies are under powered, a clinically important effect may be missed if the relevant data is not aggregated.
+  An odds ratio of .08 strongly favors the TCA treatment. However, it is clear in the forest plot that this is the most extreme treatment effect estimate. The Georgotas study's sample size is only 52: It may be random chance that the treatment is so effective. In the forest plot, 6 of the 9 study confidence intervals cross the zero line (which represents an odds ratio of 1). Because the zero line represents the null hypothesis, these 6 studies are thus not statistically significant at the .05 level. One of the takeaway messages from examining the forest plot is that simply looking at statistical significance of individual studies is not sufficient for summarizing evidence. In this case, all of the studies favor the treatment. If the individual studies are under powered, a clinically important effect may be missed if the relevant data is not aggregated.
   
 &nbsp;
   
@@ -546,13 +547,13 @@ title("Forest Plot: CD000561")
   
 &nbsp;
 
-  The meta-analysis estimate is a weighted mean of the individual study estimates. In the forest plot above, the relative weight given to each individual study in the calculation of the aggregate estimate is represented by the size of the square. How are these weights calculated?
+  The meta-analysis estimate is a weighted mean of the individual study estimates. In the forest plot above, the size of the square represents the relative weight given to each individual study. How are these weights calculated?
   
 # Fixed Effect vs Random Effects 
 
 ## Fixed Effects Models
 
-  The weighting schemes come in two flavors: fixed effect models and random effects models. The fixed effect model assumes that all of the studies share a common effect. For example, suppose a college wants to know the average math aptitude score of its students. Due to budget, time or space constraints, the school cannot expect to administer the math test to the entire college. Instead, they administer the test to five random samples of students. Each of the testing sessions is considered to be a "study."
+  The weighting schemes come in two flavors: fixed effect models and random effects models. The fixed effect model assumes that all of the studies share a common effect. For example, suppose a college wants to know the average math aptitude score of its students. Due to budget, time or space constraints, the school cannot expect to administer the math test to the entire college. Instead, they administer the test to five random samples of students. In this scenario, each of the testing sessions is considered to be a "study."
   
 &nbsp;
 
@@ -568,7 +569,7 @@ Because all of the studies in the fixed effect model share a common effect, the 
 
 ## Random Effects Models
 
-The weighting scheme for the random effects model does not assume that each study in the review shares a common effect. Though studies may be conceptually similar, their characteristics are likely not identical. Returning to the math test example, suppose the reviewer was instead interested in the math aptitude score of all college students. After searching the literature, they find the results from three different schools which administered the test to a random sample of their students. In this case, the obvious difference between the studies is that they are sampling from different populations of students. Because the true mean math aptitude score is different between different schools, each study is thus estimating a different true mean. 
+The weighting scheme for the random effects model does not assume that each study in the review shares a common effect. Though studies may be conceptually similar, their characteristics are likely not identical. Returning to the math test example, suppose the reviewer was instead interested in the math aptitude score of all college students. After searching the literature, they find the results from three different schools which administered the aptitude test to a random sample of their students. In this case, the obvious difference between the studies is that they are sampling from different populations of students. Because the true mean math aptitude score is different between different schools, each study is thus estimating a different true mean. 
 
 &nbsp;
 
@@ -576,7 +577,7 @@ Because the studies in a random effect model do not share a common effect, each 
 
 $$ \mu_{RE} = \dfrac{\sum{w_{iRE}}*y_i}{\sum{w_{iRE}}}, w_{iRE} = 1 / (v_i +  \tau^2)  $$
   
-Instead of estimating a single $\theta$, the random effects model estimates a mean ($\mu_{RE}$) of $\theta$s. $\mu_{RE}$ is still a weighted average of the individual study estimates like in the fixed effect model, but here the weights include the extra between study variance, $\tau^2$.
+Instead of estimating a single $\theta$, the random effects model estimates a mean $\mu_{RE}$ of $\theta$s. $\mu_{RE}$ is still a weighted average of the individual study estimates like in the fixed effect model, but here the weights include the extra between study variance, $\tau^2$.
 
 &nbsp;
 
@@ -584,78 +585,11 @@ In systematic reviews, there is usually no obvious reason to assume that each st
 
 # Estimating $\tau^2$
 
-A variety of methods have been proposed for estimating between study hetergeneity. In this paper, only methods that have been implemented in R's *metafor* package are examined. The seven methods that are empirically compared in this paper are: DerSimonian and Laird, Paule and Mandel, Hedges, Hunter and Schmidt, Maximum Likelihood, Restricted Maximum Likelihood, and Sidik and Jonkman. 
+A variety of methods have been proposed for estimating between study heterogeneity. In this paper, only methods that have been implemented in R's *metafor* package are examined. The seven methods that are empirically compared in this paper are: DerSimonian and Laird (1986), Paule and Mandel (1982), Hedges (1985), Hunter and Schmidt (2004), Maximum Likelihood, Restricted Maximum Likelihood (REML), and Sidik and Jonkman (2005). A brief overview of each estimation method can be found in Appendix 1. 
 
-* DerSimonian and Laird (1986):
+\newpage
 
-$$ \hat{\tau}^2_{DL} =  max\left(0,\frac{Q-df}{\sum w_{iFE} - \frac{\sum w^2_iFE}{\sum w_iFE} } \right) $$ 
-
-* Paule and Mandel (1982):
-
-$$  Q_{gen} = \sum w_{iRE} (y_i - \hat{\mu}_{RE}(\tau^2)) ^2 $$
-
-* Hedges (1985):
-
-$$ \hat{\tau}^2_H = max \left( 0, \frac{1}{df} \sum (y_i - \bar{y})^2 - \frac{1}{df+1} \sum v_i   \right)   $$
-
-
-* Hunter and Schmidt (2004):
-
-$$  \hat{\tau}^2_{HS} = max \left(  0, \frac{Q-(df+1)}{\sum w_{iFE}} \right) $$
-
-* Maximum Likelihood
-
-$$\hat{\tau}^2_{ML} = max \left( 0 , \frac{\sum w^2_{iRE}((y_i - \hat{\mu}_{RE}(\hat{\tau}^2_{ML}))^2 - v_i)}{\sum w^2_{iRE}}  \right)$$
-
-* Restricted Maximum Likelihood
-
-$$\hat{\tau}^2_{REML} = max \left( 0 , \frac{\sum w^2_{iRE}((y_i - \hat{\mu}_{RE}(\hat{\tau}^2_{REML}))^2 - v_i)}{\sum w^2_{iRE}} + \frac{1}{\sum w_{iRE}}  \right)$$
-
-* Sidik and Jonkman (2005):
-
-$$ \hat{\tau}^2_{SJ} = \frac{1}{k-1} \sum \hat{q}^{-1}_i (y_i - \hat{\mu}_{\hat{q}RE})   $$
-
-where
-
-$$  \hat {q}_i = \hat{r}_i + 1, \hat{r}_i = v_i / \hat{\tau}^2_0 $$
-
-
-
-```{r}
-
-model.names = c("DerSimonian and Laird",
-                "Paule and Mandel",
-                "Hedges",
-                "Hunter and Schmidt",
-                "Maximum Likelihood",
-                "Restricted Maximum Likelihood",
-                "Sidik and Jonkman")
-
-model.des = c("MOM, Compares the observed Cochrane Q statistic to the expected Q statistic",
-              "Iterative GMM, with Q weights = 1/(v + tau^2)",
-              "MOM, Compares observed sample variance to the expected sample variance",
-              "",
-              "",
-                "Restricted Maximum LikelihoodDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and Laird",
-                "Sidik and JonkmanDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and Laird")
-
-
-tau.model.sums = data.frame(Method = model.names, 
-                            Description = model.des
-                            )
-
-kable(tau.model.sums, format = "latex") %>%
-  column_spec(1, "1in") %>%
-  column_spec(2, "2in")
-
-```
-
-
-  
-  
-  
-
-# Empirical Analysis
+# Empirical Analysis of $\tau^2$ Estimators Using Healthcare Systematic Reviews 
 
 ## Data and Data Cleaning
 
@@ -663,7 +597,7 @@ The raw data for this analysis was extracted from The Cochrane Database of Syste
 
 &nbsp;
 
-Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were omitted. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected per each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible.
+Since tests for heterogeneity lack power, meta-analyses with less than 5 studies were omitted. Only 1 meta-analysis per review is used to estimate heterogeneity in order to avoid concerns about the correlation in heterogeneity estimates from each meta-analysis within a review. The meta-analysis with the highest number of studies is selected for each review. In the event of a tie, the meta-analysis with the highest total sample size is selected. If there is still a tie, the meta-analysis is selected at random. Studies that had rare events (defined as only one occurrence) are excluded because inverse-variance methods are biased for rarer outcomes. Also, studies with 0 values in their control and treatment arms are excluded because it makes calculating the summary effect impossible.
 
 &nbsp;
 
@@ -680,7 +614,7 @@ n.studies.hist
 
 ```
 
-We see that most of the analyses contain between 5 and 10 studies. The median number of studies used in the meta-analysis is 9. The largest meta-analysis (in terms of number of studies) is CD004125. It compares drugs for preventing post operative nausea and contains 489 studies (not pictured). 
+Most of the analyses contain between 5 and 10 studies. The median number of studies used in the meta-analysis is 9. The largest meta-analysis (in terms of number of studies) is CD004125, which compares drugs for preventing post operative nausea and contains 489 studies (not pictured). 
 
 &nbsp;
 
@@ -690,7 +624,7 @@ We then examine the distribution of the meta sample size for each meta-analysis:
 meta.n.density.plot
 ```
 
-The smallest meta sample is 93 and the largest is 3,231,551 (not pictured). The median sample size is 1,743. The largest meta-analysis (in terms of sample size) is CD000974. It examines the effictiveness of Cholera vaccines. 
+The smallest meta sample is 93 and the largest is 3,231,551 (not pictured). The median sample size is 1,743. The largest meta-analysis (in terms of sample size) is CD000974, which examines the effectiveness of Cholera vaccines. 
 
 &nbsp;
 
@@ -709,7 +643,7 @@ stargazer(fix.rand.table, header = FALSE,
 
 ```
 
-We see that even though the random effects model is recommended for systematic reviews, it is only used in 32% of the meta-analyses in our dataset. 
+Even though the random effects model is recommended for systematic reviews, it is only used in 32% of the meta-analyses in our dataset. 
 
 ## Analysis
 
@@ -719,31 +653,35 @@ For each of the 1,415 reviews, we conduct a random effects meta-analysis to esti
 
 We first look at the differences in the $\tau^2$ estimates for 60 randomly selected meta-analyses:
 
-```{r, fig.height=8, fig.width=12, cache = FALSE}
+```{r, fig.height=10, fig.width=12, cache = FALSE}
 tau.estimates.plot
 ```
 
-We see that the estimates for $\tau^2$ can vary considerably between each estimation method: In CD007944, the Hunter-Schmidt estimate for $\tau^2$ is about .55  whereas the Hedges estimate is almost 1.1. While there is no obvious pattern, it does appear that the Sidik-Jonkman estimate usually returns the highest $\tau^2$.
+The estimates for $\tau^2$ can vary considerably between each estimation method: In CD007944, the Hunter-Schmidt estimate for $\tau^2$ is about .55  whereas the Hedges estimate is almost 1.1. While there is no obvious pattern, it does appear that the Sidik-Jonkman estimate usually returns the highest $\tau^2$.
 
 &nbsp;
+
+\newpage
 
 Next, we look at the overall density plots for the $\tau^2$ estimates from each estimator:
 
-```{r}
+```{r, cache = FALSE}
 tau.square.density.plot
 ```
 
-We see that the Sidik-Jonkman estimator on average returns higher estimates for $\tau^2$. While the other estimators are modal near zero, the mode of the Sidik-Jonkman estimator is about .11.
+The Sidik-Jonkman estimator on average returns higher estimates for $\tau^2$. While the other estimators are modal near zero, the mode of the Sidik-Jonkman estimator is about .11.
 
 &nbsp;
 
+\newpage
+
 We also examine the density plot for the standard error of $\tau^2$ :
 
-```{r}
+```{r, cache = FALSE}
 tau.se.density.plot
 ```
 
-We see that the Hedges estimator on average is estimated to have a higher standard error. 
+The Hedges estimator on average has a higher estimated standard error. 
 
 &nbsp;
 
@@ -759,36 +697,137 @@ The table confirms some of what we observed in the density plots. We see that th
 
 &nbsp;
 
-Since we see that there is some discrepancy between the $\tau^2$ estimates, we also examine their effect on the meta-analysis summary estimate. Here we plot the meta analysis summary estimates for the same 60 random studies that we looked at above: 
+Since there is some discrepancy between the $\tau^2$ estimates, we also examine their effect on the meta-analysis summary estimate. Here we plot the meta analysis summary estimates for the same 60 random studies that we looked at above: 
 
 
-```{r, fig.height=8, fig.width=12}
+```{r, fig.height=10, fig.width=12, cache = FALSE}
 summary.estimates.plot
 ```
 
+Most of the time, we see that the summary odds ratios are very similar for each of the methods. However, in the plot above, we do see that occasionally there is significant disparity between the estimates. 
+
+&nbsp;
+
+Lastly, we calculate the proportional difference between the maximum summary estimate and minimum summary estimate, where:
+
+$$  pdiff = \frac{/max(log(odds)) - min(log(odds))/}{/max(log(odds))/} $$
+
+Here is a histogram for the proportionate differences:
 
 ```{r}
 p.diff.plot
 ```
 
+We see that most of the meta-analysis odds ratios do not change by more than 20%. However, estimates can vary by almost 100% on rare occasion.  
+
+
+# Conclusion
+
+In our analysis, we conduct random effects meta-analysis using data from 1,415 Cochrane Reviews. We employ 7 different estimation methods for quantifying study heterogeneity. Agreement among the estimates of $\tau^2$ is low. Moreover, this disparity occasionally has significant impact on the summary estimates. Even though large changes in summary estimates is rare, analysts should always check the sensitivity of their results by implementing different heterogeneity estimation methods. 
+
+There are several important limitations to consider. First, this empirical approach does not allow us to infer the performance of the methods in terms of accuracy in estimating the true $\tau$ (since we have no gold standard to compare against). Secondly, the methods all rely on strong assumptions. For example, many of methods assume that the underlying distribution of random effects is normal. Also, many of the methods assume the individual study estimates are known when in fact we only have estimates. 
+
+For further research, we could investigate the study characteristics that cause disparities between the heterogeneity estimates. A comprehensive simulation study would be a useful guide for further analyses.
+
+\newpage
+
+# References
+
+1. Borenstein, Michael, et al. “A Basic Introduction to Fixed-Effect and Random-Effects Models for Meta-Analysis.” RESEARCH SYNTHESIS METHODS, vol. 1, no. 2, pp. 97–111. EBSCOhost, doi:10.1002/jrsm.12. Accessed 19 Dec. 2018.
+
+2. Introduction to Meta Analysis. New York, NY: John Wiley and Sons Ltd, 2009. Print.
+
+3. Veroniki, Areti Angeliki, et al. “Methods to Estimate the Between-Study Variance and Its Uncertainty in Meta-Analysis.” Research Synthesis Methods, vol. 7, no. 1, Mar. 2016, pp. 55–79. EBSCOhost, search.ebscohost.com/login.aspx?direct=true&db=eric&AN=EJ1109025&authtype=sso&custid=rock&site=eds-live&scope=site.
+
+4. Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1–48. http://www.jstatsoft.org/v36/i03/.
+
+\newpage
+
+# Appendix 1: Between Study Estimators
+
+
+
+* DerSimonian and Laird (1986):
+
+The DerSimonian and Laird method uses the Q statistic, which is a standardized measure of total dispersion. If we subtract the expected dispersion from the total dispersion we have an estimate for the excess dispersion (on a standardized scale). With some algebra, we can convert the standardized units back to the summary units. If the estimate is negative, it is forced to be zero instead. 
+
+$$ \hat{\tau}^2_{DL} =  max\left(0,\frac{Q-df}{\sum w_{iFE} - \frac{\sum w^2_iFE}{\sum w_iFE} } \right) $$ 
+
+* Paule and Mandel (1982):
+
+The Paul and Mandel method is an iterative generalized method of moments estimator. It iterates through values of $\tau^2$ in this form of the Q-statistic: 
+
+$$  Q_{gen} = \sum w_{iRE} (y_i - \hat{\mu}_{RE}(\tau^2)) ^2 $$
+
+until it it is closest to the expected value (the degrees of freedom).
+
+* Hedges and Olkin (1985):
+
+The Hedges and Olkin method is similar to the DerSimonian and Laird method of moments estimator, but is instead uses unweighted averages of the individual study estimates. 
+
+$$ \hat{\tau}^2_H = max \left( 0, \frac{1}{df} \sum (y_i - \bar{y})^2 - \frac{1}{df+1} \sum v_i   \right)   $$
+
+
+* Hunter and Schmidt (2004):
+
+This is the equation for the Hunter and Schmidt estimator:
+
+$$  \hat{\tau}^2_{HS} = max \left(  0, \frac{Q-(df+1)}{\sum w_{iFE}} \right) $$
+
+* Maximum Likelihood
+
+The maximum likelihood estimator is an iterative method that solves for $\tau^2$ using the maximum likelihood equation. Its estimator takes the form:
+
+$$\hat{\tau}^2_{ML} = max \left( 0 , \frac{\sum w^2_{iRE}((y_i - \hat{\mu}_{RE}(\hat{\tau}^2_{ML}))^2 - v_i)}{\sum w^2_{iRE}}  \right)$$
+
+* Restricted Maximum Likelihood (REML)
+
+REML is an iterative method that solves the REML equation. Its estimator takes the form:
+
+$$\hat{\tau}^2_{REML} = max \left( 0 , \frac{\sum w^2_{iRE}((y_i - \hat{\mu}_{RE}(\hat{\tau}^2_{REML}))^2 - v_i)}{\sum w^2_{iRE}} + \frac{1}{\sum w_{iRE}}  \right)$$
+
+* Sidik and Jonkman (2005):
+
+The Sidik and Jonkman method is a least squares approach.
+
+$$ \hat{\tau}^2_{SJ} = \frac{1}{k-1} \sum \hat{q}^{-1}_i (y_i - \hat{\mu}_{\hat{q}RE})   $$
+
+where
+
+$$  \hat {q}_i = \hat{r}_i + 1, \hat{r}_i = v_i / \hat{\tau}^2_0 $$
 
 ```{r}
-
-test = full %>%
-  gather(key = "mod", value = "taus", DL.tau2, PM.tau2,
-         HE.tau2, HS.tau2, ML.tau2, REML.tau2, SJ.tau2) %>%
-  group_by(my_ID, mod) %>%
-  slice(1) %>%
-  ungroup()
-
-test1 = test %>%
-  group_by(my_ID) %>%
-  mutate(differ = max(taus) - min(taus)) %>%
-  slice(1)
-
-test2 = lm(differ ~ log(meta.n), data = test1)
-summary(test2)
+# 
+# model.names = c("DerSimonian and Laird",
+#                 "Paule and Mandel",
+#                 "Hedges",
+#                 "Hunter and Schmidt",
+#                 "Maximum Likelihood",
+#                 "Restricted Maximum Likelihood",
+#                 "Sidik and Jonkman")
+# 
+# model.des = c("MOM, Compares the observed Cochrane Q statistic to the expected Q statistic",
+#               "Iterative GMM, with Q weights = 1/(v + tau^2)",
+#               "MOM, Compares observed sample variance to the expected sample variance",
+#               "",
+#               "",
+#                 "Restricted Maximum LikelihoodDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and Laird",
+#                 "Sidik and JonkmanDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and LairdDerSimonian and Laird")
+# 
+# 
+# tau.model.sums = data.frame(Method = model.names, 
+#                             Description = model.des
+#                             )
+# 
+# kable(tau.model.sums, format = "latex") %>%
+#   column_spec(1, "1in") %>%
+#   column_spec(2, "2in")
 
 ```
 
+\newpage
 
+# Appendix 2: R code
+
+```{r ref.label=knitr::all_labels(), echo = T, eval = F}
+```
