@@ -373,7 +373,7 @@ row.names(sums4) = c("DerSimonian-Laird",
 sums4 = as.data.frame(sums4)
 
 sums4 = sums4 %>%
-  rename(Mean.Tau2 = V1, Sd.Tau2 = V2, Max.Tau2 = V3)
+  rename(Mean.Tau2 = V1, SE.Tau2 = V2, Max.Tau2 = V3)
 
 ```
 
@@ -403,7 +403,9 @@ tau.square.density.plot = full %>%
   theme_light() +
   scale_color_manual(name = "Method:", values = cols) +
   ylab("Density") +
-  xlab("log(Tau Squared)") 
+  xlab("log(Tau Squared)")  +
+  ggtitle("Density Plot: Tau Squared Estimates") +
+  theme(text=element_text(size=12,  family="CM Sans"))
   
 ```
 
@@ -431,7 +433,10 @@ tau.se.density.plot = full %>%
   theme_light() +
   scale_color_manual(name = "Method:", values = cols) +
   ylab("Density") +
-  xlab("log(Tau Squared SE)") 
+  xlab("log(Tau Squared SE)") +
+  theme(text=element_text(size=12,  family="CM Sans")) +
+  ggtitle("Density Plot: S.E. of Tau Squared Estimates") +
+  theme(text=element_text(size=12,  family="CM Sans"))
   
   
   
@@ -704,11 +709,11 @@ stargazer(fix.rand.table, header = FALSE,
 
 ```
 
-We see that even though the random effects model is recommended for systematic reviews, it is only used in 32% of the meta-analyses. 
+We see that even though the random effects model is recommended for systematic reviews, it is only used in 32% of the meta-analyses in our dataset. 
 
 ## Analysis
 
-For each of the 1,415 reviews, we conduct a random effects meta-analysis to estimate the summary effect. We elected to use odds-ratios as our summary measure. For each meta-analysis, we used each of the 7 between-study variance estimation methods and stored the overall summary estimate, the estimate for $\tau^2$, and the estimate for the standard error of $\tau^2$. 
+For each of the 1,415 reviews, we conduct a random effects meta-analysis to estimate the summary effect. We elected to use odds-ratios as our summary measure. For each meta-analysis, we use each of the 7 between-study variance estimation methods and store the overall summary estimate, the estimate for $\tau^2$, and the estimate for the standard error of $\tau^2$. 
 
 &nbsp;
 
@@ -718,22 +723,43 @@ We first look at the differences in the $\tau^2$ estimates for 60 randomly selec
 tau.estimates.plot
 ```
 
+We see that the estimates for $\tau^2$ can vary considerably between each estimation method: In CD007944, the Hunter-Schmidt estimate for $\tau^2$ is about .55  whereas the Hedges estimate is almost 1.1. While there is no obvious pattern, it does appear that the Sidik-Jonkman estimate usually returns the highest $\tau^2$.
 
+&nbsp;
 
-
-```{r, results = 'asis'}
-stargazer(sums4, header = FALSE,
-          summary = FALSE, table.placement = 'H')
-```
+Next, we look at the overall density plots for the $\tau^2$ estimates from each estimator:
 
 ```{r}
 tau.square.density.plot
 ```
 
+We see that the Sidik-Jonkman estimator on average returns higher estimates for $\tau^2$. While the other estimators are modal near zero, the mode of the Sidik-Jonkman estimator is about .11.
+
+&nbsp;
+
+We also examine the density plot for the standard error of $\tau^2$ :
+
 ```{r}
 tau.se.density.plot
 ```
 
+We see that the Hedges estimator on average is estimated to have a higher standard error. 
+
+&nbsp;
+
+Here are the summary statistics for each of the heterogeneity estimators:
+
+```{r, results = 'asis', cache = FALSE}
+stargazer(sums4, header = FALSE,
+          summary = FALSE, table.placement = 'H',
+          title = "Summary Statistics for Each Estimator")
+```
+
+The table confirms some of what we observed in the density plots. We see that the Sidik-Jonkman has the largest average estimates for $\tau^2$ and that the maximum likelihood method has the smallest. Hedge's method has the highest estimated standard error. The Hunter Schmidt method has the lowest estimated standard error. The DerSimonian and Laird method estimated the highest overall $\tau^2$ at 4.95, whereas the maximum likelihood method was the most conservative (with a maximum estimated $\tau^2$ of 3.75).
+
+&nbsp;
+
+Since we see that there is some discrepancy between the $\tau^2$ estimates, we also examine their effect on the meta-analysis summary estimate. Here we plot the meta analysis summary estimates for the same 60 random studies that we looked at above: 
 
 
 ```{r, fig.height=8, fig.width=12}
